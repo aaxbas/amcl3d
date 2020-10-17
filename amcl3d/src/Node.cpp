@@ -489,4 +489,5 @@ void Node::rvizPoseCallback(const geometry_msgs::PoseWithCovarianceStampedConstP
   }
 }
 
-}  // namespace amcl3d
+}  // namespace amcl3d //New comment
+
