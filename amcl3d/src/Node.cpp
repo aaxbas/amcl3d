@@ -61,6 +61,7 @@ void Node::spin()
   point_sub_ = nh_.subscribe("/laser_sensor", 1, &Node::pointcloudCallback, this);
   odom_sub_ = nh_.subscribe("/odometry", 1, &Node::odomCallback, this);
   range_sub_ = nh_.subscribe("/radiorange_sensor", 1, &Node::rangeCallback, this);
+  pose_sub = nh_.subscribe("/initialpose", 1, &Node::rvizPoseCallback, this);
 
   particles_pose_pub_ = nh_.advertise<geometry_msgs::PoseArray>("particle_cloud", 1, true);
   range_markers_pub_ = nh_.advertise<visualization_msgs::Marker>("range", 0);
@@ -190,20 +191,30 @@ void Node::pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
   ROS_DEBUG("pointcloudCallback close");
 }
 
-void Node::odomCallback(const geometry_msgs::TransformStampedConstPtr& msg)
+void Node::odomCallback(const nav_msgs::OdometryConstPtr& msg)
 {
   ROS_DEBUG("odomCallback open");
 
+  geometry_msgs::TransformStamped transform_msg;
+
+   transform_msg.header = msg->header;
+   transform_msg.child_frame_id = msg->child_frame_id;
+   transform_msg.transform.translation.x = msg->pose.pose.position.x;
+   transform_msg.transform.translation.y = msg->pose.pose.position.y;
+   transform_msg.transform.translation.z = msg->pose.pose.position.z;
+   transform_msg.transform.rotation = msg->pose.pose.orientation;
+
+
   base_2_odom_tf_.setOrigin(
-      tf::Vector3(msg->transform.translation.x, msg->transform.translation.y, msg->transform.translation.z));
-  base_2_odom_tf_.setRotation(tf::Quaternion(msg->transform.rotation.x, msg->transform.rotation.y,
-                                             msg->transform.rotation.z, msg->transform.rotation.w));
+      tf::Vector3(transform_msg.transform.translation.x, transform_msg.transform.translation.y, transform_msg.transform.translation.z));
+  base_2_odom_tf_.setRotation(tf::Quaternion(transform_msg.transform.rotation.x, transform_msg.transform.rotation.y,
+                                             transform_msg.transform.rotation.z, transform_msg.transform.rotation.w));
 
   /* If the filter is not initialized then exit */
   if (!pf_.isInitialized())
   {
     ROS_WARN("Filter not initialized yet, waiting for initial pose.");
-    if (parameters_.set_initial_pose_)
+    if (parameters_.set_initial_pose_ && !parameters_.use_rviz_pose_)
     {
       tf::Transform init_pose;
       init_pose.setOrigin(tf::Vector3(parameters_.init_x_, parameters_.init_y_, parameters_.init_z_));
@@ -230,7 +241,7 @@ void Node::odomCallback(const geometry_msgs::TransformStampedConstPtr& msg)
     lastodom_2_world_tf_ = initodom_2_world_tf_;
   }
 
-  static bool has_takenoff = false;
+  static bool has_takenoff = true;
   if (!has_takenoff)
   {
     ROS_WARN("Not <<taken off>> yet");
@@ -452,6 +463,30 @@ void Node::rvizMarkerPublish(const uint32_t anchor_id, const float r, const geom
 
   /* Publish marker */
   range_markers_pub_.publish(marker);
+}
+
+
+void Node::rvizPoseCallback(const geometry_msgs::PoseWithCovarianceStampedConstPtr& msg){
+  /*If filter is initialised then exit*/
+  if (!pf_.isInitialized())
+  {
+    ROS_INFO("Filter not initialized yet, using rviz pose");
+    if (parameters_.use_rviz_pose_)
+    {
+      tf::Transform init_pose;
+      
+      tf::Quaternion q;
+      tf::quaternionMsgToTF(msg->pose.pose.orientation, q);
+
+      init_pose.setOrigin(tf::Vector3(msg->pose.pose.position.x,msg->pose.pose.position.y, msg->pose.pose.position.z));
+      init_pose.setRotation(q);
+
+
+      setInitialPose(init_pose, parameters_.init_x_dev_, parameters_.init_y_dev_, parameters_.init_z_dev_,
+                     parameters_.init_a_dev_);
+    }
+    return;
+  }
 }
 
 }  // namespace amcl3d

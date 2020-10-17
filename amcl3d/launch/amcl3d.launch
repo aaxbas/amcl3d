@@ -15,10 +15,10 @@
     <!-- Topics and frames -->
 
     <!-- To set the topic which has information about the point cloud from the robot view -->
-    <remap from="laser_sensor" to="/lidar_pointcloud"/>
+    <remap from="laser_sensor" to="/lio_sam/mapping/cloud_registered"/>
 
     <!-- To set the topic which has information about the robot odometry -->
-    <remap from="odometry" to="/vicon_odometry"/>
+    <remap from="odometry" to="/encoder_odom"/>
 
     <!-- To set the topic which has information about the sensor-range sensors -->
     <remap from="radiorange_sensor" to="/nanotron_node/range"/>
@@ -30,7 +30,7 @@
     <param name="odom_frame_id" value="odom"/>
 
     <!-- To set the name of the test-bed origin TF -->
-    <param name="global_frame_id" value="world"/>
+    <param name="global_frame_id" value="map"/>
 
     <!-- To set the route to the localization of the environment map -->
     <param name="map_path" value="$(arg map_name_path)"/>
@@ -38,8 +38,8 @@
     <!-- Odometry characterization -->
 
     <!-- Flag to indicate if the initial pose has been received -->
-    <param name="set_initial_pose" value="true"/>
-
+    <param name="set_initial_pose" value="false"/>
+    <param name="use_rviz_pose" value="true"/>
     <!-- To set the position in X-axis -->
     <param name="init_x" value="$(arg init_x)"/>
 

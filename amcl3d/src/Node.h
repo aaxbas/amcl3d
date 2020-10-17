@@ -22,6 +22,8 @@
 
 #include <rosinrange_msg/RangePose.h>
 #include <tf/transform_broadcaster.h>
+#include <nav_msgs/Odometry.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 
 /*! \brief Namespace of the algorithm.
  */
@@ -95,7 +97,7 @@ private:
    * the UAV starts and what moves. It is also responsible for initializing the odometry and checking if it has taken
    * off to update the transforms based on this takeoff and if there is any jump in the algorithm.
    */
-  void odomCallback(const geometry_msgs::TransformStampedConstPtr& msg);
+  void odomCallback(const nav_msgs::OdometryConstPtr& msg);
 
   /*! \brief To process the range result of the radio-range sensors.
    *
@@ -134,6 +136,15 @@ private:
    */
   void setInitialPose(const tf::Transform& init_pose, const float x_dev, const float y_dev, const float z_dev,
                       const float a_dev);
+
+  /*! \brief Initialize the algorithm with rviz 2d pose estimate
+   *  
+   *  \param msg 2D pose estimate
+   * 
+   *  Call the setInitialPose function and initialize the algorithm 
+   *  using the pose estimates from rviz
+   */
+  void rvizPoseCallback(const geometry_msgs::PoseWithCovarianceStampedConstPtr& msg);
 
   /*! \brief Return yaw from a given TF.
    *
@@ -182,6 +193,7 @@ private:
   ros::Subscriber point_sub_; /*!< UAV point cloud subscriber */
   ros::Subscriber odom_sub_;  /*!< Odometry subscriber */
   ros::Subscriber range_sub_; /*!< Radio-range sensor information subscriber */
+  ros::Subscriber pose_sub; /*!< Initial pose from rviz subscriber */
 
   ros::Publisher particles_pose_pub_; /*!< Particles publisher */
   ros::Publisher range_markers_pub_;  /*!< Radio-range sensor information publisher */

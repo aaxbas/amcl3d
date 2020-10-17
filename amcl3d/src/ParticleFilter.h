@@ -171,6 +171,8 @@ public:
    */
   void resample();
 
+  void scatter();
+
 private:
   /*! \brief To get the particle weight according to the radio-range sensor.
    *

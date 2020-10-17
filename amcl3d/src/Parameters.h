@@ -35,7 +35,8 @@ public:
   std::string global_frame_id_; /*!< Name of the test-bed origin TF */
   std::string map_path_;        /*!< Route to the localization of the environment map  */
 
-  bool set_initial_pose_; /*!< Flag to indicate if t he initial pose has been received */
+  bool set_initial_pose_; /*!< Flag to indicate if the initial pose has been received */
+  bool use_rviz_pose_;  /*!< Flag to indicate if the initial pose should be received from rviz */
 
   double init_x_; /*!< Start x-axis position */
   double init_y_; /*!< Start y-axis position */
